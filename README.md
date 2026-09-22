@@ -30,6 +30,7 @@ that leaves is the search terms and identifiers you ask it to look up.
 - [Data, privacy and provenance](#data-privacy-and-provenance)
 - [Sources](#sources)
 - [Troubleshooting](#troubleshooting)
+- [Acknowledgements](#acknowledgements)
 - [Contributing](#contributing)
 - [Licence](#licence)
 
@@ -339,6 +340,37 @@ Run the offline test suite before opening a pull request:
 
 Every test corresponds to a bug that actually occurred. If you fix one, add the
 test that would have caught it.
+
+## Acknowledgements
+
+scilib is a thin client. Everything it is useful for was built by other people,
+most of it public infrastructure funded by grants and sustained by non-profits.
+Citations are a large part of how that funding is justified, so if scilib
+contributes to published work, please cite the sources it drew on rather than
+only this tool.
+
+| source | citation |
+|---|---|
+| OpenAlex | Priem J, Piwowar H, Orr R. OpenAlex: A fully-open index of scholarly works, authors, venues, institutions, and concepts. arXiv 2022. [10.48550/arXiv.2205.01833](https://doi.org/10.48550/arXiv.2205.01833) |
+| Europe PMC | Ferguson C, et al. Europe PMC in 2020. *Nucleic Acids Research* 2020. [10.1093/nar/gkaa994](https://doi.org/10.1093/nar/gkaa994) |
+| PubMed Central | NIH NLM NCBI PubMed Central (PMC) Article Datasets, accessed via the AWS Open Data registry. <https://registry.opendata.aws/ncbi-pmc> |
+| Crossref | Hendricks G, et al. Crossref: The sustainable source of community-owned scholarly metadata. *Quantitative Science Studies* 2020. [10.1162/qss_a_00022](https://doi.org/10.1162/qss_a_00022) |
+| Unpaywall | Piwowar H, et al. The state of OA: a large-scale analysis of the prevalence and impact of Open Access articles. *PeerJ* 2018. [10.7717/peerj.4375](https://doi.org/10.7717/peerj.4375) |
+| Semantic Scholar | Kinney R, et al. The Semantic Scholar Open Data Platform. arXiv 2023. [10.48550/arXiv.2301.10140](https://doi.org/10.48550/arXiv.2301.10140) |
+| bioRxiv | Sever R, et al. bioRxiv: the preprint server for biology. *bioRxiv* 2019. [10.1101/833400](https://doi.org/10.1101/833400) |
+| CORE | Knoth P, Zdrahal Z. CORE: Three Access Levels to Underpin Open Access. *D-Lib Magazine* 2012. [10.1045/november2012-knoth](https://doi.org/10.1045/november2012-knoth) |
+| OpenAIRE | Manghi P, et al. The OpenAIRE Research Graph Data Model. 2019. [10.5281/zenodo.2643199](https://doi.org/10.5281/zenodo.2643199) |
+| RCSB PDB | Berman HM, et al. The Protein Data Bank. *Nucleic Acids Research* 2000. [10.1093/nar/28.1.235](https://doi.org/10.1093/nar/28.1.235) |
+| UniProt | The UniProt Consortium. UniProt: the Universal Protein Knowledgebase in 2025. *Nucleic Acids Research* 2024. [10.1093/nar/gkae1010](https://doi.org/10.1093/nar/gkae1010) |
+| AlphaFold DB | Varadi M, et al. AlphaFold Protein Structure Database in 2024. *Nucleic Acids Research* 2023. [10.1093/nar/gkad1011](https://doi.org/10.1093/nar/gkad1011) |
+| arXiv, DOAJ | No canonical citation; both are acknowledged here with thanks. |
+
+Every DOI above was verified against Crossref and OpenAlex before being written,
+rather than recalled. Four of an initial set of remembered DOIs turned out to
+point at unrelated papers, which is the argument for checking them.
+
+Built on the [Model Context Protocol](https://modelcontextprotocol.io) Python
+SDK (MIT) and [httpx](https://www.python-httpx.org) (BSD-3-Clause).
 
 ## Licence
 
