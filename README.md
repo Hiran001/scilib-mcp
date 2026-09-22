@@ -372,6 +372,27 @@ point at unrelated papers, which is the argument for checking them.
 Built on the [Model Context Protocol](https://modelcontextprotocol.io) Python
 SDK (MIT) and [httpx](https://www.python-httpx.org) (BSD-3-Clause).
 
+### On authorship
+
+The implementation was written by Claude (Anthropic) in an extended
+pair-programming session, directed, reviewed and tested by the repository owner,
+who set the scope, the design constraints and the decision to use only legal
+open-access routes. This is stated because being precise about where work came
+from is the same discipline as being precise about where a number came from.
+
+The test suite is part of that record. Every test in `tests/test_offline.py`
+corresponds to a defect found during development, including a module that
+shadowed a Python standard-library package, a case-sensitive DOI index that
+silently lost full text for several major journals, and a chunked search index
+that dropped any multi-term query spanning a section boundary.
+
+### Contributions welcome, especially integrations
+
+If you maintain something that overlaps with this, the preferred outcome is one
+good tool rather than two partial ones. Open an issue and say what you have
+built; extending or integrating is more useful to everyone than a parallel
+implementation.
+
 ## Licence
 
 [MIT](LICENSE) for the code.
