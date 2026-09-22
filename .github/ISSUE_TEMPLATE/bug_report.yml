@@ -1,0 +1,39 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. configure(email="...")
+        2. lit_fetch("10.xxxx/yyyy")
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Python version
+      placeholder: "3.12"
+  - type: input
+    id: client
+    attributes:
+      label: MCP client
+      placeholder: "Claude Code / Claude Desktop / other"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output
+      description: >-
+        If the server fails to start, run it directly and paste the traceback:
+        `.venv/bin/python scilib/server.py < /dev/null`
+      render: shell

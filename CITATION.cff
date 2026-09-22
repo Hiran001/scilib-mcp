@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+title: "scilib: an MCP server for open-access scientific literature"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - alias: Hiran001
+repository-code: "https://github.com/Hiran001/scilib-mcp"
+abstract: >-
+  An MCP server that gives an AI assistant federated search across the open
+  scholarly record, full-text retrieval through legal open-access routes with
+  per-file provenance, and full-text search over a researcher's existing local
+  library. Uses only documented public APIs.
+keywords:
+  - model context protocol
+  - open access
+  - open science
+  - literature search
+  - research software
+license: MIT
+version: 0.1.0

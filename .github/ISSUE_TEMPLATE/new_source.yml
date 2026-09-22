@@ -1,0 +1,33 @@
+name: New source
+description: Propose an additional literature or data source
+labels: ["source"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Sources must be public APIs whose terms permit programmatic use.
+        Proposals that bypass access controls are out of scope.
+  - type: input
+    id: name
+    attributes:
+      label: Source name
+    validations:
+      required: true
+  - type: input
+    id: docs
+    attributes:
+      label: API documentation URL
+    validations:
+      required: true
+  - type: input
+    id: terms
+    attributes:
+      label: Terms of use URL
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What it covers that existing sources do not
+    validations:
+      required: true

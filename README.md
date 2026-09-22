@@ -1,5 +1,10 @@
 # scilib
 
+[![tests](https://github.com/Hiran001/scilib-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/Hiran001/scilib-mcp/actions/workflows/tests.yml)
+[![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+[![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![MCP](https://img.shields.io/badge/MCP-server-000000.svg)](https://modelcontextprotocol.io)
+
 **An MCP server for open-access scientific literature.**
 
 scilib gives an AI assistant three capabilities it does not have by default:
