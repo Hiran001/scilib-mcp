@@ -1,0 +1,26 @@
+# virtualenv
+.venv/
+venv/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# the library and index are per-user data, never committed
+scilib-library/
+*.db
+*.sqlite3
+outbound_queries.log
+.throttle/
+
+# local config may contain an email address and API keys
+config.json
+.env
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
