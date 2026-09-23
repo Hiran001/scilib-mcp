@@ -120,6 +120,16 @@ def routes(meta: dict) -> list[dict]:
                     add(via=f"unpaywall:{loc['host']}", kind="pdf", url=loc["pdf_url"],
                         licence=loc.get("licence", ""),
                         note=f"{loc.get('version','')} {loc.get('repository','')}".strip())
+                elif loc.get("landing_url"):
+                    # A repository copy with a landing page but no direct PDF link.
+                    # Keeping only pdf_url discarded these, and they are the GREEN
+                    # OA layer: author manuscripts deposited under funder mandates,
+                    # which is precisely what exists for a paywalled paper. One
+                    # paper had three such copies and was reported unreachable.
+                    add(via=f"unpaywall:{loc['host']}", kind="landing",
+                        url=loc["landing_url"], licence=loc.get("licence", ""),
+                        note=f"{loc.get('version','')} {loc.get('repository','')} "
+                             f"(landing page, may need a click)".strip())
     if meta.get("pdf_url"):
         add(via="openalex", kind="pdf", url=meta["pdf_url"],
             licence=meta.get("licence", ""), note="OpenAlex best OA location")

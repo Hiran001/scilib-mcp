@@ -83,10 +83,25 @@ def fetch(query: str, prefer_pdf: bool = False) -> dict:
         rec["tried"] = tried
         return rec
 
+    # Distinguish "nothing legal exists" from "automated retrieval failed but
+    # legal copies are sitting right there". Reporting the second as the first
+    # is wrong and sends the user to an author request they do not need.
+    manual = [{"via": r["via"], "url": r["url"], "kind": r["kind"],
+               "note": r.get("note", "")} for r in rs
+              if r["via"] != "local" and r.get("url")]
+    if manual:
+        return {"status": "manual_retrieval_needed", "work_id": meta["work_id"],
+                "title": meta.get("title", ""), "doi": meta.get("doi", ""),
+                "pmid": meta.get("pmid", ""), "tried": tried,
+                "legal_copies": manual,
+                "note": f"{len(manual)} legal copy/copies exist but automated "
+                        f"retrieval failed (landing pages, login walls, or a "
+                        f"server error). Open one of the URLs above and save the "
+                        f"PDF into the library, or use lib_index on it."}
     return {"status": "no_legal_fulltext", "work_id": meta["work_id"],
             "title": meta.get("title", ""), "doi": meta.get("doi", ""),
             "pmid": meta.get("pmid", ""), "tried": tried,
-            "note": "No open copy found. The paper may still be available through "
-                    "your institution's subscription, interlibrary loan, or directly "
-                    "from the authors.",
+            "note": "No open copy found anywhere. The paper may still be available "
+                    "through your institution's subscription, interlibrary loan, or "
+                    "directly from the authors.",
             "author_request_draft": resolve.author_request(meta)}
