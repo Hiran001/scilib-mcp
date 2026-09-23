@@ -24,6 +24,10 @@ def _norm(w: dict) -> dict:
         abstract = " ".join(pos[i] for i in sorted(pos))
     return {
         "source": "openalex",
+        # The OpenAlex work id (W...). Needed because the `cites` filter takes a
+        # work id, NOT a DOI: `cites:doi:10.x` is silently invalid and returns an
+        # empty set, which reads as "nothing cites this paper".
+        "openalex_id": (ids.get("openalex") or "").rsplit("/", 1)[-1],
         "doi": (ids.get("doi") or "").replace("https://doi.org/", ""),
         "pmid": (ids.get("pmid") or "").rsplit("/", 1)[-1],
         "pmcid": (ids.get("pmcid") or "").rsplit("/", 1)[-1],
@@ -78,7 +82,10 @@ def cited_by(doi: str, limit: int = 25) -> list[dict]:
     w = by_id("doi", doi)
     if not w:
         return []
-    params = {"filter": f"cites:doi:{doi}", "per-page": min(limit, 50)}
+    wid = w.get("openalex_id")
+    if not wid:
+        return []
+    params = {"filter": f"cites:{wid}", "per-page": min(limit, 50)}
     if (c := config.contact()):
         params["mailto"] = c
     j = net.get_json(f"{BASE}/works", params, kind="cites:openalex")
