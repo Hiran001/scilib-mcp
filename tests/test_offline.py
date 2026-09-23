@@ -132,6 +132,46 @@ def test_supplementary_pdf_is_not_mistaken_for_the_article():
 
 
 
+def test_pdf_info_works_through_the_real_toolchain():
+    """The supplement check's page/title signals must survive in production.
+
+    The first version of looks_like_supplement() was fed by pypdf, which is not
+    a dependency of this package. Both calls sat inside try/except, so in
+    production pages was None and the title empty, and two of the three signals
+    were silently dead. The unit test passed anyway because it supplied page
+    count and title directly. This test exercises the real extraction path on a
+    real PDF, so the same class of failure cannot pass again.
+    """
+    import shutil, tempfile, pathlib as _p
+    from scilib import extract
+    if not shutil.which("pdfinfo"):
+        return  # poppler absent: pdf_info is documented to degrade, not fail
+    # Minimal one-page PDF, written by hand so the test needs no fixture file.
+    pdf = (b"%PDF-1.4\n"
+           b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+           b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+           b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n"
+           b"trailer<</Root 1 0 R>>\n%%EOF\n")
+    with tempfile.TemporaryDirectory() as d:
+        f = _p.Path(d) / "t.pdf"
+        f.write_bytes(pdf)
+        pages, title = extract.pdf_info(f)
+        assert pages == 1, f"pdf_info returned pages={pages!r}, expected 1"
+        assert isinstance(title, str), f"title should be str, got {type(title)}"
+
+
+def test_supplement_check_does_not_need_an_undeclared_dependency():
+    """fetch's supplement path must not import a package we do not depend on."""
+    import pathlib as _p
+    src = _p.Path(__file__).resolve().parent.parent / "scilib" / "fetch.py"
+    body = src.read_text()
+    for banned in ("pypdf", "PyPDF2", "fitz", "pdfplumber"):
+        assert banned not in body, (
+            f"scilib/fetch.py references {banned!r}, which is not a declared "
+            "dependency. Use extract.pdf_info(), which uses poppler.")
+
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):

@@ -66,18 +66,7 @@ def _store(meta: dict, data: bytes, kind: str, source: str, url: str,
         nsec = len(parsed.get("sections", [])) if parsed else 0
     elif kind == "pdf":
         text, nsec = extract.pdf_to_text(path), 0
-        pages = None
-        try:
-            import pypdf
-            pages = len(pypdf.PdfReader(str(path)).pages)
-        except Exception:
-            pass
-        pdf_title = ""
-        try:
-            import pypdf
-            pdf_title = (pypdf.PdfReader(str(path)).metadata or {}).get("/Title", "") or ""
-        except Exception:
-            pass
+        pages, pdf_title = extract.pdf_info(path)
         supp = looks_like_supplement(text, pdf_title, pages)
         if supp:
             # Keep the bytes (they are often useful) but never let this count as
