@@ -104,6 +104,34 @@ def test_jats_text_does_not_weld_adjacent_tags():
     assert "E. coli DnaA" in text, f"got: {text!r}"
 
 
+def test_supplementary_pdf_is_not_mistaken_for_the_article():
+    """A publisher's full-text link can serve the SUPPLEMENT instead.
+
+    The bytes are a valid PDF, so every byte-level check passes and the
+    supplement is filed under the paper's own name. Two structural papers were
+    once recorded as retrieved when what had arrived was a 2-page MD-methods
+    supplement and a 3-page sequence listing. Both real cases are here, plus a
+    genuine article about dietary supplements, which must NOT be flagged.
+    """
+    from scilib import fetch
+    cases = [
+        # (first-page text, PDF metadata title, page count, is_supplement)
+        ("Supplementary Information Molecular dynamics simulations performed",
+         "20150513_Supplementary_Section", 2, True),
+        ("Supplement 1 - Sequences used in this study Construct A MKTII",
+         "Microsoft Word - Supplemental_AK2.docx", 3, True),
+        ("Structural insights into receptor activation. Activation of the",
+         "Nature", 10, False),
+        ("Dietary supplement use among adults: a cross-sectional survey of 4000",
+         "Dietary supplements and health", 14, False),
+    ]
+    for text, title, pages, expect_supp in cases:
+        got = bool(fetch.looks_like_supplement(text, title, pages))
+        assert got == expect_supp, (
+            f"{title!r} ({pages}p): expected supplement={expect_supp}, got {got}")
+
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):
