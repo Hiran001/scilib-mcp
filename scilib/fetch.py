@@ -6,7 +6,44 @@ read from, otherwise it is a rumour with a citation attached.
 """
 from __future__ import annotations
 import pathlib
+import re
 from . import config, db, extract, net, ids, resolve
+
+
+# Markers that a downloaded PDF is a SUPPLEMENT, not the article. A publisher's
+# "full text PDF" link can resolve to the supplementary file, and the bytes are a
+# valid PDF, so every earlier check passes and the supplement is stored under the
+# paper's own name. Two structural pillars were once recorded as retrieved when
+# what had actually been fetched was a 2-page MD-methods supplement and a 3-page
+# sequence listing. A short PDF whose first page announces itself as supplementary
+# is the signal.
+_SUPP_MARKERS = (
+    "supplementary information", "supplementary material", "supplementary section",
+    "supplementary methods", "supplementary figures", "supplementary tables",
+    "supplemental information", "supplemental material", "supplemental figure",
+    "supporting information", "si appendix", "extended data",
+)
+
+
+def looks_like_supplement(text: str, title: str = "", pages: int | None = None) -> str:
+    """Return a reason string if this PDF looks like a supplement, else ""."""
+    head = (text or "").lstrip()[:1200].lower()
+    tl = (title or "").lower()
+    for m in _SUPP_MARKERS:
+        if head.startswith(m) or m in tl:
+            return f"first page or PDF title announces {m!r}"
+    # A real article never OPENS with the word "supplement". Caught the case
+    # "Supplement 1 - Sequences used in this study", which the phrase list above
+    # missed because the publisher numbered it instead of naming it.
+    if re.match(r"supplement(al|ary)?\b", head):
+        return "first page opens with the word 'supplement'"
+    # A short PDF whose own metadata title carries "supplement" in any form.
+    # Length is required here so a paper ABOUT dietary supplements is not caught.
+    if pages is not None and pages <= 6 and re.search(r"supplement", tl):
+        return f"only {pages} pages and a PDF title containing 'supplement'"
+    if pages is not None and pages <= 4 and any(m in head for m in _SUPP_MARKERS):
+        return f"only {pages} pages and supplementary wording on page 1"
+    return ""
 
 
 def _store(meta: dict, data: bytes, kind: str, source: str, url: str,
@@ -29,6 +66,31 @@ def _store(meta: dict, data: bytes, kind: str, source: str, url: str,
         nsec = len(parsed.get("sections", [])) if parsed else 0
     elif kind == "pdf":
         text, nsec = extract.pdf_to_text(path), 0
+        pages = None
+        try:
+            import pypdf
+            pages = len(pypdf.PdfReader(str(path)).pages)
+        except Exception:
+            pass
+        pdf_title = ""
+        try:
+            import pypdf
+            pdf_title = (pypdf.PdfReader(str(path)).metadata or {}).get("/Title", "") or ""
+        except Exception:
+            pass
+        supp = looks_like_supplement(text, pdf_title, pages)
+        if supp:
+            # Keep the bytes (they are often useful) but never let this count as
+            # the article. A caller that believes it holds the paper will quote
+            # from a supplement without noticing.
+            db.record_file(wid, path, "pdf_supplement", source=source,
+                           source_url=url, licence=licence)
+            return {"path": str(path), "kind": "pdf_supplement",
+                    "status": "supplement_not_article", "bytes": len(data),
+                    "source": source, "source_url": url, "licence": licence,
+                    "chars": len(text), "pages": pages, "reason": supp,
+                    "note": "A supplementary PDF was served in place of the "
+                            "article. The main text was NOT retrieved."}
     else:
         text, nsec = data.decode("utf-8", "replace"), 0
 
