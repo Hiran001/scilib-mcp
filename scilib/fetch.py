@@ -37,6 +37,16 @@ def looks_like_supplement(text: str, title: str = "", pages: int | None = None) 
     # missed because the publisher numbered it instead of naming it.
     if re.match(r"supplement(al|ary)?\b", head):
         return "first page opens with the word 'supplement'"
+    # A marker in the OPENING of page 1, not necessarily at character zero.
+    # Missed a real Cell supplement whose page 1 began "Cell, Volume 171
+    # Supplemental Information ...", so the marker sat at character 22 and the
+    # file ran to 6 pages, escaping both the startswith test and the page-count
+    # test below. An article's first 400 characters are title and author
+    # territory and do not announce supplementary material.
+    opening = head[:400]
+    for m in _SUPP_MARKERS:
+        if m in opening:
+            return f"page 1 opens by announcing {m!r}"
     # A short PDF whose own metadata title carries "supplement" in any form.
     # Length is required here so a paper ABOUT dietary supplements is not caught.
     if pages is not None and pages <= 6 and re.search(r"supplement", tl):

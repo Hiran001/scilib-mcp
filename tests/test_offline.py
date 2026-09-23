@@ -124,6 +124,14 @@ def test_supplementary_pdf_is_not_mistaken_for_the_article():
          "Nature", 10, False),
         ("Dietary supplement use among adults: a cross-sectional survey of 4000",
          "Dietary supplements and health", 14, False),
+        # A publisher banner can push the marker off character zero, and the
+        # file can be longer than the short-PDF rule allows. This real case
+        # (6 pages, marker at character 22) slipped through both.
+        ("Journal Name, Volume 171 Supplemental Information Title Of The Paper "
+         "Author A, Author B, and Author C", "Title Of The Paper", 6, True),
+        # The same banner shape on a real article must still pass.
+        ("Journal Name, Volume 185 Article Title Of The Paper Graphical abstract "
+         "Authors Author A, Author B", "Title Of The Paper", 35, False),
     ]
     for text, title, pages, expect_supp in cases:
         got = bool(fetch.looks_like_supplement(text, title, pages))
