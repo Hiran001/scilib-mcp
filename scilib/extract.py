@@ -22,6 +22,34 @@ def pdf_to_text(path: pathlib.Path) -> str:
         return ""
 
 
+
+def pdf_info(path: pathlib.Path) -> tuple[int | None, str]:
+    """Page count and embedded title, via poppler's pdfinfo.
+
+    Uses the same toolchain as pdf_to_text rather than adding a PDF library.
+    An earlier version of the supplement check reached for pypdf, which is not
+    a dependency of this package, so both signals it fed were silently dead in
+    production while the unit test passed by supplying them directly. Returns
+    (None, "") when pdfinfo is unavailable, so callers degrade to the
+    text-only checks instead of failing.
+    """
+    if not shutil.which("pdfinfo"):
+        return None, ""
+    try:
+        out = subprocess.run(["pdfinfo", str(path)], capture_output=True, timeout=60)
+        pages, title = None, ""
+        for line in out.stdout.decode("utf-8", "replace").splitlines():
+            if line.startswith("Pages:"):
+                try:
+                    pages = int(line.split(":", 1)[1].strip())
+                except ValueError:
+                    pass
+            elif line.startswith("Title:"):
+                title = line.split(":", 1)[1].strip()
+        return pages, title
+    except Exception:
+        return None, ""
+
 def _text_of(el) -> str:
     """Flatten an element, dropping tables/figures inline but keeping their
     captions, and inserting spaces so adjacent tags do not weld words together.
