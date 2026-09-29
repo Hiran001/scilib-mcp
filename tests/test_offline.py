@@ -195,3 +195,99 @@ if __name__ == "__main__":
                 print(f"  ERROR {name}: {type(e).__name__}: {e}")
     print(f"\n{'FAILURES: ' + str(fails) if fails else 'all offline tests passed'}")
     sys.exit(1 if fails else 0)
+
+
+# --------------------------------------------------------------- tool surface
+# Every tool the server exposes is named here. A client decides whether it is
+# safe to call a tool from these hints, so a hint that does not match the code
+# is worse than no hint: it is a false assurance.
+
+EXPECTED_TOOLS = {
+    "lit_search", "lit_get", "lit_fetch", "lit_cited_by", "lit_references",
+    "lit_request_copy", "lib_search", "lib_read", "lib_index", "lib_status",
+    "pdb_entry", "uniprot_entry", "configure", "audit_log",
+}
+# Tools that change state on this machine. Everything else must be read-only.
+WRITERS = {"lit_fetch", "lib_index", "configure"}
+
+
+def _server_tools():
+    import scilib.server as srv
+    tm = srv.mcp._tool_manager
+    return list(tm._tools.values()) if hasattr(tm, "_tools") else list(tm.list_tools())
+
+
+def test_every_expected_tool_is_registered():
+    names = {t.name for t in _server_tools()}
+    assert names == EXPECTED_TOOLS, (
+        f"missing {EXPECTED_TOOLS - names}, unexpected {names - EXPECTED_TOOLS}")
+
+
+def test_every_tool_declares_annotations():
+    """A client cannot judge a tool it has no hints for."""
+    bare = [t.name for t in _server_tools() if not getattr(t, "annotations", None)]
+    assert not bare, f"tools without annotations: {bare}"
+
+
+def test_read_only_claims_match_the_code():
+    """The important one: a readOnlyHint is a promise, so check it against the AST.
+
+    A tool that declares read_only_hint=True while calling something that
+    downloads, indexes or saves is making a false safety claim to every client
+    that trusts the hint. This walks each tool's body and fails if a declared
+    read-only tool reaches a known write path.
+    """
+    import ast, pathlib
+    WRITE_CALLS = {"fetch", "index_path", "save", "record_file", "upsert_work",
+                   "index_text", "write_text", "write_bytes"}
+    src = pathlib.Path(__file__).resolve().parent.parent / "scilib" / "server.py"
+    tree = ast.parse(src.read_text())
+    bodies = {n.name: n for n in tree.body
+              if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+              and n.name in EXPECTED_TOOLS}
+
+    problems = []
+    for t in _server_tools():
+        node = bodies.get(t.name)
+        if node is None:
+            continue
+        calls = {getattr(c.func, "attr", getattr(c.func, "id", ""))
+                 for c in ast.walk(node) if isinstance(c, ast.Call)}
+        touches_write = bool(calls & WRITE_CALLS)
+        if t.annotations.read_only_hint and touches_write:
+            problems.append(f"{t.name} claims read-only but calls {sorted(calls & WRITE_CALLS)}")
+        if not t.annotations.read_only_hint and not touches_write:
+            problems.append(f"{t.name} declares write but no write call found")
+    assert not problems, "annotation does not match code:\n  " + "\n  ".join(problems)
+
+
+def test_writers_are_exactly_the_tools_that_write():
+    declared = {t.name for t in _server_tools() if not t.annotations.read_only_hint}
+    assert declared == WRITERS, (
+        f"declared writers {declared} but expected {WRITERS}; "
+        "if a tool gained or lost a side effect, update both the annotation and this test")
+
+
+def test_nothing_is_marked_destructive():
+    """This server deletes nothing. If that ever changes it must be deliberate."""
+    bad = [t.name for t in _server_tools() if t.annotations.destructive_hint]
+    assert not bad, f"tools claiming to be destructive: {bad}"
+
+
+def test_open_world_matches_whether_the_tool_leaves_the_machine():
+    """Local-only tools must not claim to reach the network, and vice versa."""
+    LOCAL_ONLY = {"lib_search", "lib_read", "lib_index", "lib_status",
+                  "configure", "audit_log"}
+    wrong = []
+    for t in _server_tools():
+        expect_open = t.name not in LOCAL_ONLY
+        if t.annotations.open_world_hint != expect_open:
+            wrong.append(f"{t.name}: open_world={t.annotations.open_world_hint}, "
+                         f"expected {expect_open}")
+    assert not wrong, "\n  ".join(wrong)
+
+
+def test_every_tool_has_a_docstring_a_user_can_act_on():
+    thin = [t.name for t in _server_tools()
+            if not (t.description or "").strip() or len(t.description) < 40]
+    assert not thin, f"tools with no usable description: {thin}"

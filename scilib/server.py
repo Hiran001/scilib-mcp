@@ -40,6 +40,11 @@ except ModuleNotFoundError as _e:                              # pragma: no cove
         raise
     from mcp.server.fastmcp import FastMCP as _Server          # mcp 1.x
 
+try:
+    from mcp.types import ToolAnnotations
+except ImportError:                                            # pragma: no cover
+    ToolAnnotations = None      # advisory metadata only; never fatal
+
 from scilib import config, db, extract, fetch as fetchmod, net, ids, index, resolve
 from scilib.sources import (openalex, europepmc, oa_locate, preprints, structures,
                             repositories)
@@ -56,7 +61,10 @@ def _trim(s: str, n: int = MAX_CHARS) -> str:
 
 # ---------------------------------------------------------------- discovery
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Search the scholarly record",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def lit_search(query: str, limit: int = 15, open_access_only: bool = False,
                year_from: str = "", year_to: str = "",
                sources: str = "openalex,europepmc,semanticscholar",
@@ -136,7 +144,10 @@ def lit_search(query: str, limit: int = 15, open_access_only: bool = False,
     return _trim("\n".join(lines))
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Resolve an identifier",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def lit_get(identifier: str) -> str:
     """Resolve a DOI, PMID, PMCID or title to full metadata plus every legal
     route to its full text. Does not download anything."""
@@ -158,7 +169,10 @@ def lit_get(identifier: str) -> str:
     return json.dumps(view, indent=2, default=str)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Download full text into the library",
+    read_only_hint=False, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def lit_fetch(identifier: str, prefer_pdf: bool = False) -> str:
     """Download the best legal full text for a paper into the local library,
     extract its text, and index it. Prefers sectioned XML over PDF because XML
@@ -167,7 +181,10 @@ def lit_fetch(identifier: str, prefer_pdf: bool = False) -> str:
                       indent=2, default=str)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Papers citing this one",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def lit_cited_by(doi: str, limit: int = 25) -> str:
     """Papers that cite this one. The route to the paper you did not know to
     search for: a keyword sweep only returns what you already thought to ask."""
@@ -180,7 +197,10 @@ def lit_cited_by(doi: str, limit: int = 25) -> str:
     return _trim("\n".join(lines))
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Bibliography of a paper",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def lit_references(identifier: str, limit: int = 40) -> str:
     """The bibliography of a paper, resolved to real records.
 
@@ -203,7 +223,10 @@ def lit_references(identifier: str, limit: int = 40) -> str:
     return _trim("\n".join(lines), 9000)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Draft a reprint request",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def lit_request_copy(identifier: str) -> str:
     """Draft a reprint request to the corresponding author.
 
@@ -219,7 +242,10 @@ def lit_request_copy(identifier: str) -> str:
 
 # ---------------------------------------------------------------- local library
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Search the local library",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=False))
 def lib_search(query: str, limit: int = 12) -> str:
     """Full-text search across every paper already on this machine.
 
@@ -243,7 +269,10 @@ def lib_search(query: str, limit: int = 12) -> str:
     return _trim("\n".join(lines), 9000)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Read a locally held paper",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=False))
 def lib_read(identifier: str, section: str = "", max_chars: int = 6000) -> str:
     """Read a paper held locally, optionally one section of it.
 
@@ -296,7 +325,10 @@ def lib_read(identifier: str, section: str = "", max_chars: int = 6000) -> str:
                  max_chars)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Index a directory of papers",
+    read_only_hint=False, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=False))
 def lib_index(path: str, recursive: bool = True, limit: int = 0) -> str:
     """Index a directory of papers already on disk so lib_search can find them.
 
@@ -309,7 +341,10 @@ def lib_index(path: str, recursive: bool = True, limit: int = 0) -> str:
     return json.dumps(r, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Local library status",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=False))
 def lib_status() -> str:
     """What the local library holds, and the current configuration."""
     st = db.stats()
@@ -327,7 +362,10 @@ def lib_status() -> str:
 
 # ---------------------------------------------------------------- structures
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="PDB entry metadata",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def pdb_entry(pdb_id: str) -> str:
     """Metadata and the PRIMARY CITATION for a PDB entry.
 
@@ -339,7 +377,10 @@ def pdb_entry(pdb_id: str) -> str:
     return json.dumps(structures.pdb_entry(pdb_id), indent=2, default=str)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="UniProt record",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=True))
 def uniprot_entry(accession: str) -> str:
     """UniProt record: sequence, features, and cross-referenced PDB entries."""
     r = structures.uniprot(accession)
@@ -350,7 +391,10 @@ def uniprot_entry(accession: str) -> str:
 
 # ---------------------------------------------------------------- admin
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="Set configuration",
+    read_only_hint=False, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=False))
 def configure(email: str = "", library: str = "", confidential_mode: str = "",
               core_api_key: str = "", s2_api_key: str = "",
               show: bool = False) -> str:
@@ -386,7 +430,10 @@ def configure(email: str = "", library: str = "", confidential_mode: str = "",
     return json.dumps({"updated": up, "config_file": str(config.CONFIG_FILE)}, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(
+    title="What has left this machine",
+    read_only_hint=True, destructive_hint=False,
+    idempotent_hint=True, open_world_hint=False))
 def audit_log(lines: int = 40) -> str:
     """Show what this tool has sent off the machine, most recent last."""
     p = config.library() / "outbound_queries.log"
