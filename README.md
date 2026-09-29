@@ -4,6 +4,7 @@
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/MCP-server-000000.svg)](https://modelcontextprotocol.io)
+[![M8ven](https://m8ven.ai/badge/mcp/hiran001/scilib-mcp?variant=verified)](https://m8ven.ai/mcp/hiran001/scilib-mcp)
 
 **An MCP server for open-access scientific literature.**
 
